@@ -518,12 +518,22 @@
   border-radius: 6px;
 }
 
+/* Each tile holds the whole picture, sized to the grid and shifted so the tile's
+   own share of it shows through. That means an image deliberately wider than
+   the box it sits in, which nearly every CSS reset forbids: Tailwind's
+   preflight, normalize.css and the rest all carry `img { max-width: 100% }`.
+   Clamped by one of those, the image is squeezed into a single tile - so every
+   tile past the first column offsets it clean out of view and draws nothing at
+   all, and the picture appears in one go when the seamless copy lands instead.
+   Say no to the clamp rather than hope the host has not set one. */
 .lb-tile img {
   position: absolute;
   left: calc(var(--c) * -100%);
   top: calc(var(--r) * -100%);
   width: calc(var(--lb-cols) * 100%);
   height: calc(var(--lb-rows) * 100%);
+  max-width: none;
+  max-height: none;
   object-fit: cover;
 }
 

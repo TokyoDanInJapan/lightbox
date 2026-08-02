@@ -88,6 +88,34 @@ test.describe('React demo', () => {
     expect(far).toBeGreaterThan(400)
   })
 
+  test('tiles survive a host stylesheet that clamps images', async ({ page }) => {
+    // Nearly every reset carries `img { max-width: 100% }` - Tailwind's
+    // preflight, normalize.css and the rest. A tile's image is deliberately
+    // wider than its tile, so a clamp squeezes the whole picture into one of
+    // them: every tile past the first column then offsets that narrow image
+    // clean out of view and draws nothing, and the picture arrives in one go
+    // when the seamless copy lands. It looked like the transition was broken.
+    await page.addStyleTag({ content: 'img, video { max-width: 100%; height: auto; }' })
+    await page.getByLabel('Transition').selectOption('draw')
+    await page.getByLabel('Tile effect').selectOption('fade')
+    await page.locator('.lb-thumb').first().click()
+    await page.waitForSelector('.lb-draw-full')
+
+    const measured = await page.evaluate(() => {
+      const tile = document.querySelectorAll<HTMLElement>('.lb-tile')[1]
+      const img = tile.querySelector('img')!
+      return {
+        cols: Number(getComputedStyle(tile).getPropertyValue('--lb-cols')),
+        tileWidth: tile.getBoundingClientRect().width,
+        imageWidth: img.getBoundingClientRect().width,
+      }
+    })
+
+    // The image spans the whole grid, not the one tile showing part of it.
+    expect(measured.cols).toBeGreaterThan(1)
+    expect(measured.imageWidth).toBeCloseTo(measured.tileWidth * measured.cols, 0)
+  })
+
   test('backdrop click closes the overlay', async ({ page }) => {
     await page.locator('.lb-thumb').first().click()
     const overlay = openOverlay(page)
