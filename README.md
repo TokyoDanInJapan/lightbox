@@ -30,7 +30,7 @@ The package is installed straight from GitHub. `npm` builds it on install
 through the `prepare` script.
 
 ```sh
-npm install github:TokyoDanInJapan/lightbox#v1.2.0
+npm install github:TokyoDanInJapan/lightbox#v1.2.1
 ```
 
 Entry points:
