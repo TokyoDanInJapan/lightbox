@@ -479,6 +479,16 @@
 .lb-draw-slide .lb-tile,
 .lb-draw-spin .lb-tile {
   transform: var(--lb-t-in, translateY(-100vh));
+  /* A tile that is going somewhere has to be visible while it goes.
+     Fading it over the whole of its journey - which is what sharing one
+     duration with the transform does - means it crosses the screen at almost
+     no opacity and only shows up once it has arrived, so the effect reads as a
+     pop rather than a slide. The further it travels the worse that looks, and
+     these travel a whole viewport. Bring it in over the first third instead,
+     and let the movement be the animation. */
+  transition:
+    opacity calc(var(--lb-tile-dur, 260ms) / 3) ease var(--d),
+    transform var(--lb-tile-dur, 260ms) ease var(--d);
 }
 
 .lb-draw.is-shown .lb-tile {
@@ -490,6 +500,12 @@
 .lb-draw-slide.is-hiding .lb-tile,
 .lb-draw-spin.is-hiding .lb-tile {
   transform: var(--lb-t-out, translateY(100vh));
+  /* The same reasoning reversed: hold it visible until it is nearly gone,
+     rather than blinking out and travelling the rest of the way unseen. */
+  transition:
+    opacity calc(var(--lb-tile-dur, 260ms) / 3) ease
+      calc(var(--d) + var(--lb-tile-dur, 260ms) * 0.67),
+    transform var(--lb-tile-dur, 260ms) ease var(--d);
 }
 
 /* Seamless copy shown over the tiles once the reveal has finished */
