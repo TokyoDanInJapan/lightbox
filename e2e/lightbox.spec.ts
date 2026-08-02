@@ -52,6 +52,42 @@ test.describe('React demo', () => {
     await expect(overlay.locator('.lb-draw-full')).toHaveCount(1)
   })
 
+  test('a tile that is travelling can be seen travelling', async ({ page }) => {
+    // Opacity and the transform used to share one duration, so a tile faded in
+    // over the whole of its journey: it crossed the viewport at almost no
+    // opacity and only appeared once it had arrived. Twenty tiles doing that
+    // reads as the picture popping into place, not sliding in.
+    await page.getByLabel('Transition').selectOption('draw')
+    await page.getByLabel('Tile effect').selectOption('slide')
+    await page.getByLabel('Slide in from').selectOption('random')
+
+    // Measured as the furthest from home a tile ever gets while fully visible.
+    // Sharing one duration put that at 168px of a ~1440px journey, so the tile
+    // only appeared once it was all but parked; over the first third it is
+    // 1152px, which is most of the way.
+    await page.evaluate(() => {
+      ;(window as unknown as { __far: number }).__far = 0
+      const sample = () => {
+        for (const tile of document.querySelectorAll('.lb-tile')) {
+          const style = getComputedStyle(tile)
+          const at = new DOMMatrixReadOnly(style.transform)
+          const away = Math.hypot(at.m41, at.m42)
+          if (Number(style.opacity) >= 0.9 && away > (window as unknown as { __far: number }).__far) {
+            ;(window as unknown as { __far: number }).__far = away
+          }
+        }
+        requestAnimationFrame(sample)
+      }
+      requestAnimationFrame(sample)
+    })
+
+    await page.locator('.lb-thumb').first().click()
+    await page.waitForTimeout(1200)
+
+    const far = await page.evaluate(() => (window as unknown as { __far: number }).__far)
+    expect(far).toBeGreaterThan(400)
+  })
+
   test('backdrop click closes the overlay', async ({ page }) => {
     await page.locator('.lb-thumb').first().click()
     const overlay = openOverlay(page)
