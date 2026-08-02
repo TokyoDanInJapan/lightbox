@@ -1,0 +1,148 @@
+---
+// A no-React page: the thumbnail grid is server-rendered by Astro, and the
+// lightbox core is wired up in a plain client script. This mirrors how a
+// framework-free Astro site (server-optimised thumbnails, vanilla scripts)
+// would adopt the library.
+import { resolveText, toSrcSet } from 'lightbox/core'
+import { cityAndArchitecture, landscapes } from '../components/images'
+
+const galleries = [
+  { id: 'vanilla-landscapes', name: 'Landscapes', images: landscapes },
+  { id: 'vanilla-city', name: 'City & architecture', images: cityAndArchitecture },
+]
+
+const thumbnailSizes = '(max-width: 600px) 45vw, 240px'
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lightbox vanilla demo</title>
+  </head>
+  <body>
+    <main class="vanilla-main">
+      <h1>Vanilla demo (no React)</h1>
+      <p class="vanilla-intro">
+        These grids are server-rendered HTML. The overlay comes from
+        <code>createLightbox()</code> — no framework runtime on this page.
+        The pop transition grows out of the thumbnail you click.
+      </p>
+      <p>
+        <button type="button" id="external-open">Open the third landscape via a gallery:open event</button>
+        <a href="/">React demo</a>
+      </p>
+      {
+        galleries.map((gallery) => (
+          <section class="lb-gallery" data-lb-theme="auto" id={gallery.id}>
+            <h2>{gallery.name}</h2>
+            <ul class="lb-grid">
+              {gallery.images.map((image, index) => {
+                const title = resolveText(image.title ?? '', 'en')
+                const sources = image.thumbnailSources ?? image.sources
+                const smallest = [...sources].sort((a, b) => a.width - b.width)[0]
+                return (
+                  <li>
+                    <button type="button" class="lb-thumb" data-index={index} aria-label={title}>
+                      <img
+                        src={smallest.src}
+                        srcset={toSrcSet(sources)}
+                        sizes={thumbnailSizes}
+                        alt={title}
+                        loading={index < 4 ? 'eager' : 'lazy'}
+                        width={image.width}
+                        height={image.height}
+                      />
+                      {title && <span class="lb-thumb-title">{title}</span>}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          </section>
+        ))
+      }
+    </main>
+  </body>
+</html>
+
+<script>
+  import 'lightbox/styles.css'
+  import { createLightbox } from 'lightbox/core'
+  import { cityAndArchitecture, landscapes } from '../components/images'
+
+  const galleries = [
+    { id: 'vanilla-landscapes', images: landscapes },
+    { id: 'vanilla-city', images: cityAndArchitecture },
+  ]
+
+  for (const { id, images } of galleries) {
+    const section = document.getElementById(id)
+    if (!section) continue
+    const lightbox = createLightbox({
+      images,
+      locale: 'en',
+      theme: 'auto',
+      transition: 'pop',
+      container: section,
+    })
+    section.querySelectorAll<HTMLButtonElement>('.lb-thumb').forEach((button) => {
+      button.addEventListener('click', () => {
+        lightbox.open(Number(button.dataset.index ?? '0'), button)
+      })
+    })
+  }
+
+  // The external seam: any component can ask a gallery to open at an index
+  // without knowing anything about its markup.
+  document.getElementById('external-open')?.addEventListener('click', () => {
+    document
+      .getElementById('vanilla-landscapes')
+      ?.dispatchEvent(new CustomEvent('gallery:open', { detail: { index: 2 } }))
+  })
+</script>
+
+<style is:global>
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+    background: #101114;
+    color: #f2f3f5;
+  }
+  @media (prefers-color-scheme: light) {
+    body {
+      background: #fafafa;
+      color: #17181c;
+    }
+  }
+  .vanilla-main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 32px 20px 64px;
+  }
+  .vanilla-main h1 {
+    font-size: 26px;
+    margin: 0 0 8px;
+  }
+  .vanilla-main h2 {
+    font-size: 19px;
+    margin: 36px 0 14px;
+  }
+  .vanilla-intro {
+    opacity: 0.75;
+    line-height: 1.6;
+  }
+  .vanilla-main a {
+    color: inherit;
+    margin-left: 12px;
+  }
+  .vanilla-main button#external-open {
+    font: inherit;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid currentColor;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+</style>

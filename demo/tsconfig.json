@@ -1,0 +1,13 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "lightbox": ["../src/index.ts"],
+      "lightbox/core": ["../src/core/index.ts"],
+      "lightbox/styles.css": ["../src/styles.css"]
+    }
+  },
+  "include": [".astro/types.d.ts", "src"]
+}
