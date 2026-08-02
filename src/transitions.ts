@@ -6,7 +6,7 @@ import type {
   TransitionConfig,
   TransitionKind,
   TransitionSetting,
-} from './types'
+} from './types.js'
 
 export const transitionDefaultDuration: Record<TransitionKind, number> = {
   pop: 300,

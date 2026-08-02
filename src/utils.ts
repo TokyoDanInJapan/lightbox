@@ -1,4 +1,4 @@
-import type { ImageSource } from './types'
+import type { ImageSource } from './types.js'
 
 export function toSrcSet(sources: ImageSource[]): string {
   return [...sources]

@@ -1,4 +1,4 @@
-import { formatCounter, getUIStrings, resolveText } from '../i18n'
+import { formatCounter, getUIStrings, resolveText } from '../i18n.js'
 import {
   resolveRollEdge,
   resolveSlideEdge,
@@ -8,10 +8,10 @@ import {
   spinTransform,
   tileRanks,
   type ResolvedTransition,
-} from '../transitions'
-import { largestSource, toSrcSet } from '../utils'
-import type { GalleryImage, ThemeSetting, TransitionSetting, UIStrings } from '../types'
-import { afterPaint, el, iconButton } from './dom'
+} from '../transitions.js'
+import { largestSource, toSrcSet } from '../utils.js'
+import type { GalleryImage, ThemeSetting, TransitionSetting, UIStrings } from '../types.js'
+import { afterPaint, el, iconButton } from './dom.js'
 
 const FULL_SIZES = '92vw'
 /** Extra time before removal so CSS transitions can finish. */

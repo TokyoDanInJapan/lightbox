@@ -1,4 +1,4 @@
-import type { GalleryImage, ImageSource } from '@lightbox/react'
+import type { GalleryImage, ImageSource } from 'lightbox/core'
 
 /** Build a 3:2 srcset from picsum.photos at three widths. */
 const pic = (id: number): ImageSource[] =>

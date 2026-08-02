@@ -24,18 +24,33 @@ the bundled React `<Gallery>` component.
 - **Opens from the thumbnail**: give `open()` the clicked element and the `pop`
   transition grows the image out of it.
 
+## Installing
+
+The package is installed straight from GitHub. `npm` builds it on install
+through the `prepare` script.
+
+```sh
+npm install github:TokyoDanInJapan/lightbox#v0.2.0
+```
+
+Entry points:
+
+- `lightbox/core` — the framework-free API (no React in your bundle).
+- `lightbox` — the above plus the React `<Gallery>` component.
+- `lightbox/styles.css` — the stylesheet, required by both.
+
 ## Layout
 
-- `packages/lightbox` — the library (`@lightbox/react`, with a framework-free
-  `@lightbox/react/core` entry).
-- `demo` — an Astro site exercising every feature: a React page at `/` and a
+- `src/` — the library. `src/core/` is framework-free; `src/react/` is the
+  optional wrapper.
+- `demo/` — an Astro site exercising every feature: a React page at `/` and a
   no-React page at `/vanilla`.
 
 ## Running the demo
 
 ```sh
 npm install
-npm run dev        # starts the Astro dev server
+npm run dev        # installs the demo's dependencies, then starts Astro
 ```
 
 ## The image shape
@@ -43,7 +58,7 @@ npm run dev        # starts the Astro dev server
 Both APIs take the same data:
 
 ```ts
-import type { GalleryImage } from '@lightbox/react/core'
+import type { GalleryImage } from 'lightbox/core'
 
 const images: GalleryImage[] = [
   {
@@ -67,8 +82,8 @@ Render your own thumbnails however you like (server-side, with your site's
 image pipeline), then attach the core:
 
 ```ts
-import '@lightbox/react/styles.css'
-import { createLightbox } from '@lightbox/react/core'
+import 'lightbox/styles.css'
+import { createLightbox } from 'lightbox/core'
 
 const section = document.querySelector('#my-gallery')
 const lightbox = createLightbox({
@@ -124,8 +139,8 @@ thumbnails and two independent galleries.
 ## Usage with React
 
 ```tsx
-import { Gallery } from '@lightbox/react'
-import '@lightbox/react/styles.css'
+import { Gallery } from 'lightbox'
+import 'lightbox/styles.css'
 
 <Gallery images={images} locale="ja" theme="auto" transition="draw" />
 ```
@@ -134,13 +149,13 @@ In an Astro page with the React integration, mount it as an island:
 
 ```astro
 ---
-import { Gallery } from '@lightbox/react'
+import { Gallery } from 'lightbox'
 ---
 <Gallery images={images} locale="en" client:load />
 ```
 
-React is an optional peer dependency: sites that only import
-`@lightbox/react/core` never load it.
+React is an optional peer dependency: sites that only import `lightbox/core`
+never load it.
 
 ### `<Gallery>` props
 
@@ -219,12 +234,17 @@ All colours are CSS custom properties scoped to `[data-lb-theme]` in
 }
 ```
 
-## Publishing
+## Releasing
 
-The package currently ships TypeScript source, consumed directly by Vite/Astro
-through the alias in `demo/astro.config.mjs`. To publish to npm, add a build
-step (for example `tsup src/index.ts --format esm --dts`) and point `exports`
-at `dist/`.
+Bump `version` in `package.json`, commit, then tag and push:
+
+```sh
+git tag v0.x.y && git push --tags
+```
+
+Consumers pin the tag in their dependency specifier
+(`github:TokyoDanInJapan/lightbox#v0.x.y`). The build runs on the consumer's
+machine at install time, so no artefacts are committed.
 
 ## Licence
 

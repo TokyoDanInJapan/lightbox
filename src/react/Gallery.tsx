@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react'
-import { createLightbox, type LightboxController } from '../core/lightbox'
-import { resolveText } from '../i18n'
-import { smallestSource, toSrcSet } from '../utils'
-import type { GalleryImage, ThemeSetting, TransitionSetting, UIStrings } from '../types'
+import { createLightbox, type LightboxController } from '../core/lightbox.js'
+import { resolveText } from '../i18n.js'
+import { smallestSource, toSrcSet } from '../utils.js'
+import type { GalleryImage, ThemeSetting, TransitionSetting, UIStrings } from '../types.js'
 
 export interface GalleryProps {
   images: GalleryImage[]

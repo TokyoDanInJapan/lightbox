@@ -1,4 +1,4 @@
-import type { LocalizedText, UIStrings } from './types'
+import type { LocalizedText, UIStrings } from './types.js'
 
 export const builtinUIStrings: Record<string, UIStrings> = {
   en: {

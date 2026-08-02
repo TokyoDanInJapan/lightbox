@@ -8,8 +8,8 @@ import {
   type TileOrder,
   type TransitionKind,
   type TransitionSetting,
-} from '@lightbox/react'
-import '@lightbox/react/styles.css'
+} from 'lightbox'
+import 'lightbox/styles.css'
 import './demo.css'
 import { cityAndArchitecture, landscapes } from './images'
 
