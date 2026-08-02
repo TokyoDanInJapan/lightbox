@@ -1,0 +1,32 @@
+{
+  "name": "@lightbox/react",
+  "version": "0.1.0",
+  "description": "Themeable, localisable image gallery and lightbox for React and Astro",
+  "license": "MIT",
+  "author": "Daniel Hebberd",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TokyoDanInJapan/lightbox.git",
+    "directory": "packages/lightbox"
+  },
+  "keywords": [
+    "lightbox",
+    "gallery",
+    "react",
+    "astro",
+    "responsive-images",
+    "i18n"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles.css": "./src/styles.css"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  }
+}

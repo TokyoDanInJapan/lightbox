@@ -1,0 +1,153 @@
+# Lightbox
+
+A themeable, localisable image gallery and lightbox component for React, designed
+to drop into Astro sites as a client island.
+
+- **Multiple galleries per page** — each `<Gallery>` is fully self-contained.
+- **Light / dark / auto theming** via CSS custom properties.
+- **Titles, descriptions and alt text per image**, each either a plain string or a
+  locale map (`{ en: 'River', ja: '川' }`). UI strings are built in for English
+  and Japanese. Add other locales through the `uiStrings` prop.
+- **Responsive images** — every image lists its available resolutions, and the
+  component emits `srcset`/`sizes` for both thumbnails and the full-size view.
+- **Six open/close transitions**: `pop`, `fade`, `slide` (in from a screen
+  edge, out through another), `spin` (tumbles in from an edge or corner,
+  rotating as it travels), `roll` (unrolls like a carpet from one edge and
+  rolls back up on close) and `draw` (the image appears as tiles in a
+  configurable order and style). Falls back to a plain fade when the user
+  prefers reduced motion.
+- **Desktop and mobile**: keyboard navigation (arrows, Escape, focus trap),
+  touch swipe left/right to navigate and down to close, safe-area insets.
+
+## Layout
+
+- `packages/lightbox` — the component library (`@lightbox/react`).
+- `demo` — an Astro site exercising every feature.
+
+## Running the demo
+
+```sh
+npm install
+npm run dev        # starts the Astro dev server
+```
+
+## Usage
+
+```tsx
+import { Gallery, type GalleryImage } from '@lightbox/react'
+import '@lightbox/react/styles.css'
+
+const images: GalleryImage[] = [
+  {
+    sources: [
+      { src: '/photos/river-480.jpg', width: 480 },
+      { src: '/photos/river-960.jpg', width: 960 },
+      { src: '/photos/river-1920.jpg', width: 1920 },
+    ],
+    width: 1920,
+    height: 1280,
+    title: { en: 'River valley', ja: '渓谷の川' },
+    description: { en: 'Early morning on the river.', ja: '早朝の川。' },
+    alt: { en: 'A river in a forested valley', ja: '森の谷を流れる川' },
+  },
+]
+
+<Gallery images={images} locale="ja" theme="auto" transition="draw" />
+```
+
+In an Astro page, mount it as an island:
+
+```astro
+---
+import { Gallery } from '@lightbox/react'
+---
+<Gallery images={images} locale="en" client:load />
+```
+
+### `<Gallery>` props
+
+| Prop | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `images` | `GalleryImage[]` | — | See shape above. |
+| `locale` | `string` | `'en'` | Selects caption text and UI strings. |
+| `theme` | `'light' \| 'dark' \| 'auto'` | `'auto'` | `auto` follows `prefers-color-scheme`. |
+| `transition` | `TransitionSetting` | `'pop'` | Open/close animation: a kind or a config object (see below). |
+| `thumbnailSizes` | `string` | `'(max-width: 600px) 45vw, 240px'` | `sizes` attribute for thumbnails. |
+| `uiStrings` | `Partial<Record<string, Partial<UIStrings>>>` | — | Add or override chrome labels per locale. |
+| `className` | `string` | — | Extra class on the gallery root. |
+
+### Configuring transitions
+
+`transition` accepts either a kind — `'pop' | 'fade' | 'slide' | 'draw' |
+'spin' | 'roll'` — or a config object:
+
+```tsx
+<Gallery images={images} transition={{ kind: 'draw', duration: 1500, cols: 8, rows: 6 }} />
+```
+
+| Field | Applies to | Default | Meaning |
+| --- | --- | --- | --- |
+| `kind` | — | — | Which animation to use. |
+| `duration` | all | pop 300 / fade 260 / slide 440 / draw 760 / spin 600 / roll 700 | Total open/close time in ms. For `draw`, the time until the last tile has finished appearing. |
+| `cols` | draw | 5 | Number of tile columns. |
+| `rows` | draw | 4 | Number of tile rows. |
+| `tileDuration` | draw | 260 | Fade time of one tile in ms. The gap between tiles is derived from `duration`, `tileDuration` and the tile count. |
+| `tileEffect` | draw | `'fade'` | How each tile arrives: `'fade'`, `'pop'` (scales up into place), `'slide'` (enters from `slideFrom`, leaves via `slideTo`) or `'spin'` (as slide, but rotating). |
+| `tileOrder` | draw | `'random'` | Order tiles appear in: `'random'` (shuffled, re-shuffled on close), `'sequential'` (top-left to bottom-right in reading order), `'snake'` (reverses direction on every other row) or `'diagonal'` (anti-diagonal bands sweeping from the top-left corner to the bottom-right). |
+| `slideFrom` | slide, spin, roll, draw+slide/spin tiles | `'top'` | Screen edge or corner the image (or each tile) travels in from: `'top' \| 'bottom' \| 'left' \| 'right' \| 'top-left' \| 'top-right' \| 'bottom-left' \| 'bottom-right' \| 'random'`. With `'random'`, slide/spin/roll pick one per open and draw picks one per tile. Tiles travel from the actual viewport edge, not just outside their own cell. |
+| `slideTo` | slide, spin, draw+slide/spin tiles | `'bottom'` | As `slideFrom`, but the edge it leaves through on close. Ignored by `roll`. |
+
+The `spin` transition rotates the image one full turn as it travels, with the
+spin direction matching the motion (entering from the left turns clockwise,
+from the right counter-clockwise).
+
+The `roll` transition unrolls the image like a carpet from its `slideFrom`
+edge — a soft roller shadow tracks the unroll front — and always rolls back
+up towards that same edge on close. Corners coerce to `top`/`bottom`.
+
+When the user has `prefers-reduced-motion` set, every transition collapses to a
+default-speed fade regardless of configuration.
+
+### Adding a locale
+
+```tsx
+<Gallery
+  images={images}
+  locale="fr"
+  uiStrings={{
+    fr: {
+      dialogLabel: "Visionneuse d'images",
+      close: 'Fermer',
+      next: 'Image suivante',
+      previous: 'Image précédente',
+      counter: 'Image {current} sur {total}',
+    },
+  }}
+/>
+```
+
+Unknown locales fall back to English for UI strings. Localised image text falls
+back to `en`, then to the first available value.
+
+### Theming
+
+All colours are CSS custom properties scoped to `[data-lb-theme]` in
+`styles.css` — override them in your own stylesheet to match your site:
+
+```css
+[data-lb-theme='dark'] {
+  --lb-backdrop: rgba(0, 0, 0, 0.97);
+  --lb-focus: #f97316;
+}
+```
+
+## Publishing
+
+The package currently ships TypeScript source, consumed directly by Vite/Astro
+through the alias in `demo/astro.config.mjs`. To publish to npm, add a build
+step (for example `tsup src/index.ts --format esm --dts`) and point `exports`
+at `dist/`.
+
+## Licence
+
+[MIT](LICENSE)
