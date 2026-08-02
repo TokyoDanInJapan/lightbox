@@ -10,6 +10,7 @@ export default defineConfig({
     resolve: {
       alias: [
         { find: '@lightbox/react/styles.css', replacement: lib('styles.css') },
+        { find: '@lightbox/react/core', replacement: lib('core/index.ts') },
         { find: '@lightbox/react', replacement: lib('index.ts') },
       ],
     },

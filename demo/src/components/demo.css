@@ -50,6 +50,10 @@
   line-height: 1.6;
 }
 
+.demo-intro a {
+  color: inherit;
+}
+
 .demo-controls {
   display: flex;
   flex-wrap: wrap;

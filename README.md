@@ -1,9 +1,12 @@
 # Lightbox
 
-A themeable, localisable image gallery and lightbox component for React, designed
-to drop into Astro sites as a client island.
+A themeable, localisable image lightbox with a framework-free core. Use it from
+plain JavaScript on any site (including framework-free Astro sites), or through
+the bundled React `<Gallery>` component.
 
-- **Multiple galleries per page** — each `<Gallery>` is fully self-contained.
+- **No framework required** — the overlay is plain DOM and CSS
+  (`createLightbox()`). React is an optional wrapper, not a dependency.
+- **Multiple galleries per page** — each gallery is fully self-contained.
 - **Light / dark / auto theming** via CSS custom properties.
 - **Titles, descriptions and alt text per image**, each either a plain string or a
   locale map (`{ en: 'River', ja: '川' }`). UI strings are built in for English
@@ -18,11 +21,15 @@ to drop into Astro sites as a client island.
   prefers reduced motion.
 - **Desktop and mobile**: keyboard navigation (arrows, Escape, focus trap),
   touch swipe left/right to navigate and down to close, safe-area insets.
+- **Opens from the thumbnail**: give `open()` the clicked element and the `pop`
+  transition grows the image out of it.
 
 ## Layout
 
-- `packages/lightbox` — the component library (`@lightbox/react`).
-- `demo` — an Astro site exercising every feature.
+- `packages/lightbox` — the library (`@lightbox/react`, with a framework-free
+  `@lightbox/react/core` entry).
+- `demo` — an Astro site exercising every feature: a React page at `/` and a
+  no-React page at `/vanilla`.
 
 ## Running the demo
 
@@ -31,11 +38,12 @@ npm install
 npm run dev        # starts the Astro dev server
 ```
 
-## Usage
+## The image shape
 
-```tsx
-import { Gallery, type GalleryImage } from '@lightbox/react'
-import '@lightbox/react/styles.css'
+Both APIs take the same data:
+
+```ts
+import type { GalleryImage } from '@lightbox/react/core'
 
 const images: GalleryImage[] = [
   {
@@ -51,11 +59,78 @@ const images: GalleryImage[] = [
     alt: { en: 'A river in a forested valley', ja: '森の谷を流れる川' },
   },
 ]
+```
+
+## Usage without a framework
+
+Render your own thumbnails however you like (server-side, with your site's
+image pipeline), then attach the core:
+
+```ts
+import '@lightbox/react/styles.css'
+import { createLightbox } from '@lightbox/react/core'
+
+const section = document.querySelector('#my-gallery')
+const lightbox = createLightbox({
+  images,
+  locale: 'en',
+  theme: 'auto',
+  transition: 'pop',
+  container: section,   // optional: enables the gallery:open event seam
+})
+
+section.querySelectorAll('.my-thumb').forEach((button, index) => {
+  button.addEventListener('click', () => lightbox.open(index, button))
+})
+```
+
+The controller API:
+
+| Method | Behaviour |
+| --- | --- |
+| `open(index, trigger?)` | Open at an image. With a `trigger` element, `pop` grows out of its on-screen position. |
+| `close()` | Play the closing animation, then remove the overlay. |
+| `next()` / `prev()` | Navigate. |
+| `setLocale(locale)` | Switch language; live captions and labels re-render. |
+| `destroy()` | Remove all listeners and any open overlay immediately. |
+
+When `container` is set, the controller also listens for a CustomEvent, so
+other components can open the gallery without knowing its markup:
+
+```ts
+section.dispatchEvent(new CustomEvent('gallery:open', { detail: { index: 2 } }))
+```
+
+### With Astro's image pipeline
+
+Build `sources` at compile time from optimised assets, then feed the script:
+
+```astro
+---
+import { getImage } from 'astro:assets'
+
+const sources = await Promise.all(
+  [480, 960, 1920].map(async (width) => ({
+    src: (await getImage({ src: original, width })).src,
+    width,
+  })),
+)
+---
+```
+
+The demo's `/vanilla` page shows the full pattern with server-rendered
+thumbnails and two independent galleries.
+
+## Usage with React
+
+```tsx
+import { Gallery } from '@lightbox/react'
+import '@lightbox/react/styles.css'
 
 <Gallery images={images} locale="ja" theme="auto" transition="draw" />
 ```
 
-In an Astro page, mount it as an island:
+In an Astro page with the React integration, mount it as an island:
 
 ```astro
 ---
@@ -63,6 +138,9 @@ import { Gallery } from '@lightbox/react'
 ---
 <Gallery images={images} locale="en" client:load />
 ```
+
+React is an optional peer dependency: sites that only import
+`@lightbox/react/core` never load it.
 
 ### `<Gallery>` props
 

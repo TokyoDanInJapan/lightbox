@@ -53,6 +53,7 @@ const copy: Record<DemoLocale, Record<string, string>> = {
     random: 'Random',
     gallery1: 'Landscapes',
     gallery2: 'City & architecture',
+    vanillaLink: 'Vanilla demo (no React) →',
   },
   ja: {
     heading: 'ライトボックス デモ',
@@ -91,6 +92,7 @@ const copy: Record<DemoLocale, Record<string, string>> = {
     random: 'ランダム',
     gallery1: '風景',
     gallery2: '街と建築',
+    vanillaLink: 'バニラ版デモ（React不使用）→',
   },
 }
 
@@ -138,7 +140,9 @@ export default function DemoApp() {
     <div className="demo" data-theme={theme}>
       <main className="demo-main">
         <h1>{t.heading}</h1>
-        <p className="demo-intro">{t.intro}</p>
+        <p className="demo-intro">
+          {t.intro} <a href="/vanilla">{t.vanillaLink}</a>
+        </p>
 
         <div className="demo-controls">
           <label>

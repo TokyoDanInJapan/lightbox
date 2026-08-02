@@ -5,6 +5,7 @@
     "baseUrl": ".",
     "paths": {
       "@lightbox/react": ["../packages/lightbox/src/index.ts"],
+      "@lightbox/react/core": ["../packages/lightbox/src/core/index.ts"],
       "@lightbox/react/styles.css": ["../packages/lightbox/src/styles.css"]
     }
   },

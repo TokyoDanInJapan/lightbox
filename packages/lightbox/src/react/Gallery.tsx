@@ -1,8 +1,8 @@
-import { useState } from 'react'
-import { LightboxOverlay } from './LightboxOverlay'
-import { resolveText } from './i18n'
-import { smallestSource, toSrcSet } from './utils'
-import type { GalleryImage, ThemeSetting, TransitionSetting, UIStrings } from './types'
+import { useEffect, useRef } from 'react'
+import { createLightbox, type LightboxController } from '../core/lightbox'
+import { resolveText } from '../i18n'
+import { smallestSource, toSrcSet } from '../utils'
+import type { GalleryImage, ThemeSetting, TransitionSetting, UIStrings } from '../types'
 
 export interface GalleryProps {
   images: GalleryImage[]
@@ -23,6 +23,10 @@ export interface GalleryProps {
   className?: string
 }
 
+/**
+ * Thumbnail grid backed by the framework-free lightbox core. The grid is
+ * React; the overlay is plain DOM created by `createLightbox`.
+ */
 export function Gallery({
   images,
   locale = 'en',
@@ -32,10 +36,36 @@ export function Gallery({
   uiStrings,
   className,
 }: GalleryProps) {
-  const [openIndex, setOpenIndex] = useState<number | null>(null)
+  const rootRef = useRef<HTMLDivElement | null>(null)
+  const controllerRef = useRef<LightboxController | null>(null)
+
+  // Recreate the controller when configuration changes. Options are compared
+  // by value: demo-style callers pass fresh object literals on every render,
+  // and identity comparison would tear the controller down each time.
+  const optionsKey = JSON.stringify({ locale, theme, transition, uiStrings })
+  useEffect(() => {
+    const controller = createLightbox({
+      images,
+      locale,
+      theme,
+      transition,
+      uiStrings,
+      container: rootRef.current ?? undefined,
+    })
+    controllerRef.current = controller
+    return () => {
+      controllerRef.current = null
+      controller.destroy()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- options compared via optionsKey
+  }, [images, optionsKey])
 
   return (
-    <div className={className ? `lb-gallery ${className}` : 'lb-gallery'} data-lb-theme={theme}>
+    <div
+      ref={rootRef}
+      className={className ? `lb-gallery ${className}` : 'lb-gallery'}
+      data-lb-theme={theme}
+    >
       <ul className="lb-grid">
         {images.map((image, i) => {
           const sources = image.thumbnailSources ?? image.sources
@@ -47,7 +77,7 @@ export function Gallery({
                 type="button"
                 className="lb-thumb"
                 aria-label={title || alt}
-                onClick={() => setOpenIndex(i)}
+                onClick={(e) => controllerRef.current?.open(i, e.currentTarget)}
               >
                 <img
                   src={smallestSource(sources).src}
@@ -64,17 +94,6 @@ export function Gallery({
           )
         })}
       </ul>
-      {openIndex !== null && (
-        <LightboxOverlay
-          images={images}
-          initialIndex={openIndex}
-          locale={locale}
-          theme={theme}
-          transition={transition}
-          uiStrings={uiStrings}
-          onClose={() => setOpenIndex(null)}
-        />
-      )}
     </div>
   )
 }
