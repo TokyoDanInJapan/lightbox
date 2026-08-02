@@ -157,6 +157,31 @@ describe('createLightbox', () => {
     controller = null
   })
 
+  it('asks for the width the default stage draws, not the full viewport', () => {
+    controller = createLightbox({ images, transition: FAST })
+    controller.open(0)
+    const img = overlay()!.querySelector<HTMLImageElement>('.lb-img')!
+    expect(img.getAttribute('sizes')).toBe('min(92vw, calc(76vh * 1.5))')
+  })
+
+  it('honours a per-image sizes override', () => {
+    const custom = [{ ...image(1), sizes: '100vw' }]
+    controller = createLightbox({ images: custom, transition: FAST })
+    controller.open(0)
+    const img = overlay()!.querySelector<HTMLImageElement>('.lb-img')!
+    expect(img.getAttribute('sizes')).toBe('100vw')
+  })
+
+  it('exposes the aspect ratio to CSS in both forms', () => {
+    controller = createLightbox({ images, transition: FAST })
+    controller.open(0)
+    const stage = overlay()!.querySelector<HTMLElement>('.lb-stage')!
+    expect(stage.style.getPropertyValue('--lb-ar')).toBe('960 / 640')
+    expect(stage.style.getPropertyValue('--lb-ar-num')).toBe('1.5')
+    // The size itself is left to the stylesheet, so a host can restyle it.
+    expect(stage.style.width).toBe('')
+  })
+
   it('hides the previous/next buttons for a single image', () => {
     controller = createLightbox({ images: [image(1)], transition: FAST })
     controller.open(0)

@@ -1,6 +1,6 @@
 {
   "name": "lightbox",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Themeable, localisable image lightbox with a framework-free core and an optional React wrapper",
   "keywords": [
     "lightbox",

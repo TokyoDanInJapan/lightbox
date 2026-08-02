@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { largestSource, smallestSource, toSrcSet } from './utils.js'
+import { defaultSizes, largestSource, smallestSource, toSrcSet } from './utils.js'
 
 const sources = [
   { src: '/img-960.jpg', width: 960 },
@@ -29,5 +29,19 @@ describe('largestSource / smallestSource', () => {
     const single = [{ src: '/only.jpg', width: 100 }]
     expect(largestSource(single)).toBe(single[0])
     expect(smallestSource(single)).toBe(single[0])
+  })
+})
+
+describe('defaultSizes', () => {
+  it('bounds the width by the height for a landscape image', () => {
+    expect(defaultSizes(1920, 1280)).toBe('min(92vw, calc(76vh * 1.5))')
+  })
+
+  it('scales with the aspect ratio', () => {
+    expect(defaultSizes(1000, 2000)).toBe('min(92vw, calc(76vh * 0.5))')
+  })
+
+  it('falls back to a square rather than dividing by zero', () => {
+    expect(defaultSizes(1000, 0)).toBe('min(92vw, calc(76vh * 1))')
   })
 })
