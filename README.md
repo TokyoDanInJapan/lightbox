@@ -53,6 +53,17 @@ npm install
 npm run dev        # installs the demo's dependencies, then starts Astro
 ```
 
+## Tests
+
+```sh
+npm run test:unit   # Vitest: pure logic and the core overlay in happy-dom
+npm run test:e2e    # Playwright: both demo pages in Chromium
+npm test            # both
+```
+
+The browser tests build the demo and serve it with `astro preview`
+automatically. CI runs the full suite on every push and pull request.
+
 ## The image shape
 
 Both APIs take the same data:

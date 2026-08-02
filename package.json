@@ -45,6 +45,7 @@
   "files": [
     "dist",
     "src",
+    "!src/**/*.test.ts",
     "README.md",
     "LICENSE"
   ],
@@ -59,6 +60,11 @@
     "dev": "npm --prefix demo run dev",
     "prebuild:demo": "npm --prefix demo install",
     "build:demo": "npm --prefix demo run build",
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "pretest:e2e": "npm --prefix demo install",
+    "test:e2e": "playwright test",
     "prepare": "npm run build"
   },
   "peerDependencies": {
@@ -74,8 +80,11 @@
     }
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "typescript": "^5.6.0"
+    "happy-dom": "^20.11.1",
+    "typescript": "^5.6.0",
+    "vitest": "^4.1.10"
   }
 }
