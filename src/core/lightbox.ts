@@ -9,13 +9,16 @@ import {
   tileRanks,
   type ResolvedTransition,
 } from '../transitions.js'
-import { largestSource, toSrcSet } from '../utils.js'
+import { defaultSizes, largestSource, toSrcSet } from '../utils.js'
 import type { GalleryImage, ThemeSetting, TransitionSetting, UIStrings } from '../types.js'
 import { afterPaint, el, iconButton } from './dom.js'
 
-const FULL_SIZES = '92vw'
 /** Extra time before removal so CSS transitions can finish. */
 const CLOSE_BUFFER_MS = 60
+
+/** The `sizes` an image asks for: its own, or the default stage geometry. */
+const sizesFor = (image: GalleryImage): string =>
+  image.sizes ?? defaultSizes(image.width, image.height)
 
 export interface LightboxOptions {
   /** The images this lightbox can show. Must contain at least one entry. */
@@ -234,9 +237,12 @@ export function createLightbox(options: LightboxOptions): LightboxController {
     const description = resolveText(image.description, locale)
     const alt = resolveText(image.alt, locale) || title
 
-    const ratio = image.width / image.height
+    // Both forms of the aspect ratio: `--lb-ar` for `aspect-ratio`, which needs
+    // a <ratio>, and `--lb-ar-num` for the width calc, which needs a number.
+    // The stage's size lives in the stylesheet rather than here so a host can
+    // restyle it - an inline width would need !important to override.
     s.stage.style.setProperty('--lb-ar', `${image.width} / ${image.height}`)
-    s.stage.style.width = `min(92vw, calc(76vh * ${ratio}))`
+    s.stage.style.setProperty('--lb-ar-num', String(image.width / image.height))
 
     // Replace the frame but keep the roll bar, which animates independently.
     s.stage.querySelector('.lb-frame')?.remove()
@@ -274,7 +280,7 @@ export function createLightbox(options: LightboxOptions): LightboxController {
     const img = el('img', className)
     img.src = largestSource(image.sources).src
     img.srcset = toSrcSet(image.sources)
-    img.sizes = FULL_SIZES
+    img.sizes = sizesFor(image)
     img.alt = alt
     img.draggable = false
     return img
@@ -348,7 +354,7 @@ export function createLightbox(options: LightboxOptions): LightboxController {
     for (const delta of [1, -1]) {
       const neighbour = images[(index + delta + images.length) % images.length]
       const pre = new Image()
-      pre.sizes = FULL_SIZES
+      pre.sizes = sizesFor(neighbour)
       pre.srcset = toSrcSet(neighbour.sources)
       pre.src = largestSource(neighbour.sources).src
     }

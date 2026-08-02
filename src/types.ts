@@ -22,6 +22,13 @@ export interface GalleryImage {
   alt?: LocalizedText
   title?: LocalizedText
   description?: LocalizedText
+  /**
+   * `sizes` attribute for the full-size image. Defaults to the width the
+   * default stylesheet gives the stage. Set this when your own CSS overrides
+   * `--lb-stage-max-w` / `--lb-stage-max-h`, so the browser is told the width
+   * it actually draws rather than over-fetching.
+   */
+  sizes?: string
 }
 
 export type TransitionKind = 'pop' | 'fade' | 'slide' | 'draw' | 'spin' | 'roll'

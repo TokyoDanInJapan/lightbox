@@ -30,7 +30,7 @@ The package is installed straight from GitHub. `npm` builds it on install
 through the `prepare` script.
 
 ```sh
-npm install github:TokyoDanInJapan/lightbox#v1.0.0
+npm install github:TokyoDanInJapan/lightbox#v1.1.0
 ```
 
 Entry points:
@@ -86,6 +86,10 @@ const images: GalleryImage[] = [
   },
 ]
 ```
+
+Each image may also carry a `sizes` string. Leave it out and the lightbox asks
+for the width its own stylesheet draws — see [Theming](#theming) if you change
+that.
 
 ## Usage without a framework
 
@@ -244,6 +248,23 @@ All colours are CSS custom properties scoped to `[data-lb-theme]` in
   --lb-focus: #f97316;
 }
 ```
+
+### How much of the screen the image fills
+
+The stage is bounded on both axes by `--lb-stage-max-w` (default `92vw`) and
+`--lb-stage-max-h` (default `76vh`). Override them for a fuller-bleed viewer:
+
+```css
+.lb-overlay {
+  --lb-stage-max-w: 100vw;
+  --lb-stage-max-h: calc(100dvh - 5lh);
+}
+```
+
+`sizes` is an HTML attribute, so CSS cannot reach it: when you change the
+geometry, tell the images about it too, or the browser keeps fetching for the
+default. Pass a `sizes` string per image matching your own rule — `defaultSizes(width, height)`
+is exported if you only want to vary one of the two limits.
 
 ## Releasing
 

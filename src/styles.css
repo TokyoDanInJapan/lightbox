@@ -156,9 +156,13 @@
   padding: 56px 16px calc(16px + env(safe-area-inset-bottom));
 }
 
+/* Bounded on both axes. Override --lb-stage-max-w / --lb-stage-max-h to give
+   the image more or less of the viewport; tell the images about it too, with
+   `sizes` on each one, or the browser fetches for the default geometry. */
 .lb-stage {
   position: relative;
   aspect-ratio: var(--lb-ar);
+  width: min(var(--lb-stage-max-w, 92vw), calc(var(--lb-stage-max-h, 76vh) * var(--lb-ar-num, 1)));
   max-width: 100%;
   max-height: 100%;
   border-radius: 6px;
