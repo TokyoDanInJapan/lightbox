@@ -7,7 +7,13 @@ import { fileURLToPath } from 'node:url'
 // specifiers through the package's dist/ exports instead.
 const lib = (path) => fileURLToPath(new URL(`../src/${path}`, import.meta.url))
 
+// GitHub Pages serves a project site from a subpath, so the deployed build
+// takes its base from the environment. Development and the Playwright suite
+// leave DEMO_BASE unset and run at the root.
+const base = process.env.DEMO_BASE ?? '/'
+
 export default defineConfig({
+  base,
   integrations: [react()],
   vite: {
     resolve: {

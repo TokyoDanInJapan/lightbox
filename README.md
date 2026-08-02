@@ -46,12 +46,20 @@ Entry points:
 - `demo/` — an Astro site exercising every feature: a React page at `/` and a
   no-React page at `/vanilla`.
 
-## Running the demo
+## The demo
+
+It is published from `main` at
+[tokyodaninjapan.github.io/lightbox](https://tokyodaninjapan.github.io/lightbox/),
+and runs locally with:
 
 ```sh
 npm install
 npm run dev        # installs the demo's dependencies, then starts Astro
 ```
+
+GitHub Pages serves it from a subpath, so the deploying workflow builds it with
+`DEMO_BASE=/lightbox`. Leave that unset and the demo is served from the root,
+which is what development and the browser tests use.
 
 ## Tests
 

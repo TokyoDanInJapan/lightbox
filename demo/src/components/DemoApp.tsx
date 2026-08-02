@@ -11,6 +11,7 @@ import {
 } from 'lightbox'
 import 'lightbox/styles.css'
 import './demo.css'
+import { withBase } from '../base'
 import { cityAndArchitecture, landscapes } from './images'
 
 type DemoLocale = 'en' | 'ja'
@@ -141,7 +142,7 @@ export default function DemoApp() {
       <main className="demo-main">
         <h1>{t.heading}</h1>
         <p className="demo-intro">
-          {t.intro} <a href="/vanilla">{t.vanillaLink}</a>
+          {t.intro} <a href={withBase('/vanilla')}>{t.vanillaLink}</a>
         </p>
 
         <div className="demo-controls">
