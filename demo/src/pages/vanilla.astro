@@ -4,6 +4,7 @@
 // framework-free Astro site (server-optimised thumbnails, vanilla scripts)
 // would adopt the library.
 import { resolveText, toSrcSet } from 'lightbox/core'
+import { withBase } from '../base'
 import { cityAndArchitecture, landscapes } from '../components/images'
 
 const galleries = [
@@ -30,7 +31,7 @@ const thumbnailSizes = '(max-width: 600px) 45vw, 240px'
       </p>
       <p>
         <button type="button" id="external-open">Open the third landscape via a gallery:open event</button>
-        <a href="/">React demo</a>
+        <a href={withBase('/')}>React demo</a>
       </p>
       {
         galleries.map((gallery) => (
