@@ -82,9 +82,9 @@
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "happy-dom": "^20.11.1",
+    "@types/react-dom": "^19.2.5",
+    "happy-dom": "^20.11.8",
     "typescript": "^7.0.2",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   }
 }
