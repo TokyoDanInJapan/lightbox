@@ -18,6 +18,14 @@ describe('resolveText', () => {
     expect(resolveText({ ja: '川' }, 'fr')).toBe('川')
   })
 
+  it('reads a regional locale as its language', () => {
+    expect(resolveText({ en: 'River', ja: '川' }, 'ja-JP')).toBe('川')
+  })
+
+  it('prefers the exact regional text when there is some', () => {
+    expect(resolveText({ en: 'Colour', 'en-US': 'Color' }, 'en-US')).toBe('Color')
+  })
+
   it('returns an empty string for undefined', () => {
     expect(resolveText(undefined, 'en')).toBe('')
   })
@@ -32,6 +40,19 @@ describe('getUIStrings', () => {
     expect(getUIStrings('fr').close).toBe('Close')
   })
 
+  it("uses the built-in strings of a regional locale's language", () => {
+    expect(getUIStrings('ja-JP').close).toBe('閉じる')
+  })
+
+  it('applies language-wide overrides, then regional ones', () => {
+    const strings = getUIStrings('fr-CA', {
+      fr: { close: 'Fermer', next: 'Image suivante' },
+      'fr-CA': { close: 'Fermer ici' },
+    })
+    expect(strings.close).toBe('Fermer ici')
+    expect(strings.next).toBe('Image suivante')
+  })
+
   it('merges per-locale overrides over the built-ins', () => {
     const strings = getUIStrings('fr', { fr: { close: 'Fermer' } })
     expect(strings.close).toBe('Fermer')
@@ -43,5 +64,9 @@ describe('formatCounter', () => {
   it('substitutes both placeholders', () => {
     expect(formatCounter('Image {current} of {total}', 2, 6)).toBe('Image 2 of 6')
     expect(formatCounter('{total}枚中{current}枚目', 2, 6)).toBe('6枚中2枚目')
+  })
+
+  it('substitutes a placeholder used more than once', () => {
+    expect(formatCounter('{current}/{total} ({current})', 2, 6)).toBe('2/6 (2)')
   })
 })

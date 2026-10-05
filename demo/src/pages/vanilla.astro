@@ -3,7 +3,7 @@
 // lightbox core is wired up in a plain client script. This mirrors how a
 // framework-free Astro site (server-optimised thumbnails, vanilla scripts)
 // would adopt the library.
-import { resolveText, toSrcSet } from 'lightbox/core'
+import { thumbnailAttributes } from 'lightbox/core'
 import { withBase } from '../base'
 import { cityAndArchitecture, landscapes } from '../components/images'
 
@@ -11,8 +11,6 @@ const galleries = [
   { id: 'vanilla-landscapes', name: 'Landscapes', images: landscapes },
   { id: 'vanilla-city', name: 'City & architecture', images: cityAndArchitecture },
 ]
-
-const thumbnailSizes = '(max-width: 600px) 45vw, 240px'
 ---
 
 <html lang="en">
@@ -39,22 +37,21 @@ const thumbnailSizes = '(max-width: 600px) 45vw, 240px'
             <h2>{gallery.name}</h2>
             <ul class="lb-grid">
               {gallery.images.map((image, index) => {
-                const title = resolveText(image.title ?? '', 'en')
-                const sources = image.thumbnailSources ?? image.sources
-                const smallest = [...sources].sort((a, b) => a.width - b.width)[0]
+                const thumb = thumbnailAttributes(image, 'en')
                 return (
                   <li>
-                    <button type="button" class="lb-thumb" data-index={index} aria-label={title}>
+                    <button type="button" class="lb-thumb" data-index={index} aria-label={thumb.label}>
                       <img
-                        src={smallest.src}
-                        srcset={toSrcSet(sources)}
-                        sizes={thumbnailSizes}
-                        alt={title}
+                        src={thumb.src}
+                        srcset={thumb.srcset}
+                        sizes={thumb.sizes}
+                        alt={thumb.alt}
                         loading={index < 4 ? 'eager' : 'lazy'}
-                        width={image.width}
-                        height={image.height}
+                        decoding="async"
+                        width={thumb.width}
+                        height={thumb.height}
                       />
-                      {title && <span class="lb-thumb-title">{title}</span>}
+                      {thumb.title && <span class="lb-thumb-title">{thumb.title}</span>}
                     </button>
                   </li>
                 )
@@ -80,14 +77,18 @@ const thumbnailSizes = '(max-width: 600px) 45vw, 240px'
   for (const { id, images } of galleries) {
     const section = document.getElementById(id)
     if (!section) continue
+    const thumbs = section.querySelectorAll<HTMLButtonElement>('.lb-thumb')
     const lightbox = createLightbox({
       images,
       locale: 'en',
       theme: 'auto',
       transition: 'pop',
       container: section,
+      // Lets pop find the thumbnail for any image: the one opened by the
+      // gallery:open event below, or the one on show when it closes.
+      triggerFor: (index) => thumbs[index],
     })
-    section.querySelectorAll<HTMLButtonElement>('.lb-thumb').forEach((button) => {
+    thumbs.forEach((button) => {
       button.addEventListener('click', () => {
         lightbox.open(Number(button.dataset.index ?? '0'), button)
       })

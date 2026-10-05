@@ -46,6 +46,7 @@
     "dist",
     "src",
     "!src/**/*.test.ts",
+    "!src/**/*.test.tsx",
     "README.md",
     "LICENSE"
   ],
@@ -56,6 +57,8 @@
     "build": "tsc -p tsconfig.build.json && cp src/styles.css dist/styles.css",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "format": "biome check --write .",
     "predev": "npm --prefix demo install",
     "dev": "npm --prefix demo run dev",
     "prebuild:demo": "npm --prefix demo install",
@@ -80,10 +83,13 @@
     }
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.15",
     "@playwright/test": "^1.63.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "happy-dom": "^20.14.5",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "typescript": "^7.0.2",
     "vitest": "^5.0.3"
   }

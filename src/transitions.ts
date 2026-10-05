@@ -40,14 +40,13 @@ export function resolveTransition(
   setting: TransitionSetting = 'pop',
   reducedMotion = false,
 ): ResolvedTransition {
-  const config: TransitionConfig =
-    typeof setting === 'string' ? { kind: setting } : setting
+  const config: TransitionConfig = typeof setting === 'string' ? { kind: setting } : setting
   const kind = reducedMotion ? 'fade' : config.kind
   const duration = Math.max(
     0,
     reducedMotion
       ? transitionDefaultDuration.fade
-      : config.duration ?? transitionDefaultDuration[kind],
+      : (config.duration ?? transitionDefaultDuration[kind]),
   )
   const cols = Math.max(1, Math.round(config.cols ?? 5))
   const rows = Math.max(1, Math.round(config.rows ?? 4))

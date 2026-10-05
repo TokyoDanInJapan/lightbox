@@ -19,7 +19,8 @@ type DemoLocale = 'en' | 'ja'
 const copy: Record<DemoLocale, Record<string, string>> = {
   en: {
     heading: 'Lightbox demo',
-    intro: 'Two independent galleries on one page. Try the theme, language and transition controls, then click a thumbnail.',
+    intro:
+      'Two independent galleries on one page. Try the theme, language and transition controls, then click a thumbnail.',
     language: 'Language',
     theme: 'Theme',
     themeLight: 'Light',
@@ -58,7 +59,8 @@ const copy: Record<DemoLocale, Record<string, string>> = {
   },
   ja: {
     heading: 'ライトボックス デモ',
-    intro: '1ページに独立した2つのギャラリー。テーマ・言語・トランジションを切り替えて、サムネイルをクリックしてください。',
+    intro:
+      '1ページに独立した2つのギャラリー。テーマ・言語・トランジションを切り替えて、サムネイルをクリックしてください。',
     language: '言語',
     theme: 'テーマ',
     themeLight: 'ライト',
@@ -256,23 +258,23 @@ export default function DemoApp() {
                 </select>
               </label>
               {showSlideTo && (
-              <label>
-                {t.slideTo}
-                <select
-                  value={slideTo}
-                  onChange={(e) => setSlideTo(e.target.value as SlideDirection)}
-                >
-                  <option value="top">{t.top}</option>
-                  <option value="bottom">{t.bottom}</option>
-                  <option value="left">{t.left}</option>
-                  <option value="right">{t.right}</option>
-                  <option value="top-left">{t.topLeft}</option>
-                  <option value="top-right">{t.topRight}</option>
-                  <option value="bottom-left">{t.bottomLeft}</option>
-                  <option value="bottom-right">{t.bottomRight}</option>
-                  <option value="random">{t.random}</option>
-                </select>
-              </label>
+                <label>
+                  {t.slideTo}
+                  <select
+                    value={slideTo}
+                    onChange={(e) => setSlideTo(e.target.value as SlideDirection)}
+                  >
+                    <option value="top">{t.top}</option>
+                    <option value="bottom">{t.bottom}</option>
+                    <option value="left">{t.left}</option>
+                    <option value="right">{t.right}</option>
+                    <option value="top-left">{t.topLeft}</option>
+                    <option value="top-right">{t.topRight}</option>
+                    <option value="bottom-left">{t.bottomLeft}</option>
+                    <option value="bottom-right">{t.bottomRight}</option>
+                    <option value="random">{t.random}</option>
+                  </select>
+                </label>
               )}
             </>
           )}
