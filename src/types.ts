@@ -61,7 +61,7 @@ export interface TransitionConfig {
   /**
    * Total open/close animation time in ms. For 'draw' this is the time until
    * the last tile has finished appearing. Defaults per kind:
-   * pop 300, fade 260, slide 440, draw 760.
+   * pop 300, fade 260, slide 440, draw 760, spin 600, roll 700.
    */
   duration?: number
   /** 'draw' only: number of tile columns. Default 5. */
@@ -72,7 +72,8 @@ export interface TransitionConfig {
   tileDuration?: number
   /**
    * 'draw' only: how each tile arrives — 'fade' (default), 'pop' (scales up
-   * into place) or 'slide' (enters from `slideFrom`, leaves via `slideTo`).
+   * into place), 'slide' (enters from `slideFrom`, leaves via `slideTo`) or
+   * 'spin' (as slide, but rotating).
    */
   tileEffect?: TileEffect
   /** 'draw' only: the order tiles appear in. Default 'random'. */

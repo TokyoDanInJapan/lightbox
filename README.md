@@ -19,10 +19,13 @@ the bundled React `<Gallery>` component.
   rolls back up on close) and `draw` (the image appears as tiles in a
   configurable order and style). Falls back to a plain fade when the user
   prefers reduced motion.
-- **Desktop and mobile**: keyboard navigation (arrows, Escape, focus trap),
-  touch swipe left/right to navigate and down to close, safe-area insets.
+- **Desktop and mobile**: keyboard navigation (arrows and Escape), touch swipe
+  left/right to navigate and down to close, safe-area insets. The overlay is a
+  native modal `<dialog>`, so focus stays inside it and the page behind it is
+  inert.
 - **Opens from the thumbnail**: give `open()` the clicked element and the `pop`
-  transition grows the image out of it.
+  transition grows the image out of it. The thumbnail stands in for the full
+  image until that has loaded.
 
 ## Installing
 
@@ -64,13 +67,17 @@ which is what development and the browser tests use.
 ## Tests
 
 ```sh
-npm run test:unit   # Vitest: pure logic and the core overlay in happy-dom
+npm run test:unit   # Vitest: pure logic, the core overlay and the React wrapper in happy-dom
 npm run test:e2e    # Playwright: both demo pages in Chromium
 npm test            # both
+npm run lint        # Biome: lint and formatting
+npm run format      # Biome: fix what it can
 ```
 
 The browser tests build the demo and serve it with `astro preview`
-automatically. CI runs the full suite on every push and pull request.
+automatically. They serve a local photo in place of the demo's picsum.photos
+images, so they need no network. CI runs the linter and the full suite on every
+push and pull request.
 
 ## The image shape
 
@@ -109,18 +116,30 @@ import 'lightbox/styles.css'
 import { createLightbox } from 'lightbox/core'
 
 const section = document.querySelector('#my-gallery')
+const thumbs = section.querySelectorAll('.my-thumb')
 const lightbox = createLightbox({
   images,
   locale: 'en',
   theme: 'auto',
   transition: 'pop',
-  container: section,   // optional: enables the gallery:open event seam
+  container: section,                 // optional: enables the gallery:open event seam
+  triggerFor: (index) => thumbs[index], // optional: lets pop find any image's thumbnail
 })
 
-section.querySelectorAll('.my-thumb').forEach((button, index) => {
+thumbs.forEach((button, index) => {
   button.addEventListener('click', () => lightbox.open(index, button))
 })
 ```
+
+`thumbnailAttributes(image, locale, sizes?)` returns the `src`, `srcset`,
+`sizes`, `alt`, `width` and `height` for a thumbnail image, and a `label` and
+`title` for its button. The React grid and the demo's server-rendered page both
+use it, so their markup stays the same.
+
+Give `triggerFor` when you can. Without it, `pop` can only use the element
+passed to `open()`. After the viewer moves to another image, the closing
+animation then shrinks into the centre, because the thumbnail of the image on
+show is not known.
 
 The controller API:
 
@@ -129,7 +148,8 @@ The controller API:
 | `open(index, trigger?)` | Open at an image. With a `trigger` element, `pop` grows out of its on-screen position. |
 | `close()` | Play the closing animation, then remove the overlay. |
 | `next()` / `prev()` | Navigate. |
-| `setLocale(locale)` | Switch language; live captions and labels re-render. |
+| `update(changes)` | Change `images`, `locale`, `theme`, `transition` or `uiStrings`. An open overlay keeps its place: text and theme change in place, and the picture is redrawn only when `images` changes. A new `transition` applies from the next opening. |
+| `setLocale(locale)` | Switch language. Short for `update({ locale })`. |
 | `destroy()` | Remove all listeners and any open overlay immediately. |
 
 When `container` is set, the controller also listens for a CustomEvent, so
@@ -180,6 +200,10 @@ import { Gallery } from 'lightbox'
 React is an optional peer dependency: sites that only import `lightbox/core`
 never load it.
 
+The component keeps one lightbox for its whole life. It compares props by
+value, so a re-render that passes equal but new objects (for example,
+`images={data.map(...)}`) changes nothing, and an open overlay stays open.
+
 ### `<Gallery>` props
 
 | Prop | Type | Default | Notes |
@@ -189,6 +213,7 @@ never load it.
 | `theme` | `'light' \| 'dark' \| 'auto'` | `'auto'` | `auto` follows `prefers-color-scheme`. |
 | `transition` | `TransitionSetting` | `'pop'` | Open/close animation: a kind or a config object (see below). |
 | `thumbnailSizes` | `string` | `'(max-width: 600px) 45vw, 240px'` | `sizes` attribute for thumbnails. |
+| `eagerThumbnails` | `number` | `4` | How many thumbnails, from the start, load at once instead of lazily. |
 | `uiStrings` | `Partial<Record<string, Partial<UIStrings>>>` | — | Add or override chrome labels per locale. |
 | `className` | `string` | — | Extra class on the gallery root. |
 
@@ -242,20 +267,29 @@ default-speed fade regardless of configuration.
 />
 ```
 
-Unknown locales fall back to English for UI strings. Localised image text falls
-back to `en`, then to the first available value.
+A regional locale such as `ja-JP` (what `navigator.language` returns) uses
+the text for its language, `ja`, when it has none of its own. Overrides for the
+language apply first, then those for the region. After that, unknown locales
+fall back to English for UI strings. Localised image text falls back to `en`,
+then to the first available value.
 
 ### Theming
 
 All colours are CSS custom properties scoped to `[data-lb-theme]` in
-`styles.css` — override them in your own stylesheet to match your site:
+`styles.css`. Each one holds its light and its dark value in `light-dark()`,
+and the theme sets `color-scheme` to choose between them. Override them in your
+own stylesheet to match your site:
 
 ```css
-[data-lb-theme='dark'] {
-  --lb-backdrop: rgba(0, 0, 0, 0.97);
-  --lb-focus: #f97316;
+[data-lb-theme] {
+  --lb-backdrop: light-dark(rgba(255, 255, 255, 0.97), rgba(0, 0, 0, 0.97));
+  --lb-focus: #f97316; /* the same in both themes */
 }
 ```
+
+A plain value applies to both themes. To change one theme only, give the token
+a `light-dark()` value that keeps the built-in colour for the other theme.
+`light-dark()` needs Chrome 123, Firefox 120 or Safari 17.5 or later.
 
 ### How much of the screen the image fills
 

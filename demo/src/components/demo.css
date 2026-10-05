@@ -2,30 +2,25 @@
   min-height: 100vh;
   background: var(--page-bg);
   color: var(--page-fg);
-  transition: background 0.2s ease, color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
 .demo {
-  --page-bg: #fafafa;
-  --page-fg: #17181c;
-  --page-muted: #565b64;
-  --page-border: #d8dade;
+  --page-bg: light-dark(#fafafa, #101114);
+  --page-fg: light-dark(#17181c, #f2f3f5);
+  --page-muted: light-dark(#565b64, #a2a7b0);
+  --page-border: light-dark(#d8dade, #33363d);
+  color-scheme: light;
 }
 
 .demo[data-theme='dark'] {
-  --page-bg: #101114;
-  --page-fg: #f2f3f5;
-  --page-muted: #a2a7b0;
-  --page-border: #33363d;
+  color-scheme: dark;
 }
 
-@media (prefers-color-scheme: dark) {
-  .demo[data-theme='auto'] {
-    --page-bg: #101114;
-    --page-fg: #f2f3f5;
-    --page-muted: #a2a7b0;
-    --page-border: #33363d;
-  }
+.demo[data-theme='auto'] {
+  color-scheme: light dark;
 }
 
 .demo-main {

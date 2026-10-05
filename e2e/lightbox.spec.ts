@@ -1,6 +1,37 @@
-import { expect, test, type Page } from '@playwright/test'
+import { fileURLToPath } from 'node:url'
+import { test as base, expect, type Page } from '@playwright/test'
+
+const photo = fileURLToPath(new URL('./fixtures/photo.jpg', import.meta.url))
+
+// The demo's pictures come from picsum.photos. Serve a local one in their
+// place, so the suite neither depends on that site nor waits on it.
+// biome-ignore lint/suspicious/noConfusingVoidType: Playwright's idiom for a fixture with no value
+const test = base.extend<{ localPhotos: void }>({
+  localPhotos: [
+    async ({ page }, use) => {
+      await page.route('https://picsum.photos/**', (route) =>
+        route.fulfill({ path: photo, contentType: 'image/jpeg' }),
+      )
+      await use()
+    },
+    { auto: true },
+  ],
+})
 
 const openOverlay = (page: Page) => page.locator('.lb-overlay')
+
+/**
+ * Wait for the stage to stop animating. The class changes when the animation
+ * starts, so a box measured straight after is still scaled. A transition that
+ * is cancelled or retargeted rejects `finished`, so wait until none are left
+ * rather than for the first set to resolve.
+ */
+const settled = (page: Page) =>
+  page.locator('.lb-stage').evaluate(async (stage) => {
+    for (let running = stage.getAnimations(); running.length; running = stage.getAnimations()) {
+      await Promise.allSettled(running.map((a) => a.finished))
+    }
+  })
 
 test.describe('React demo', () => {
   test.beforeEach(async ({ page }) => {
@@ -72,7 +103,10 @@ test.describe('React demo', () => {
           const style = getComputedStyle(tile)
           const at = new DOMMatrixReadOnly(style.transform)
           const away = Math.hypot(at.m41, at.m42)
-          if (Number(style.opacity) >= 0.9 && away > (window as unknown as { __far: number }).__far) {
+          if (
+            Number(style.opacity) >= 0.9 &&
+            away > (window as unknown as { __far: number }).__far
+          ) {
             ;(window as unknown as { __far: number }).__far = away
           }
         }
@@ -82,7 +116,8 @@ test.describe('React demo', () => {
     })
 
     await page.locator('.lb-thumb').first().click()
-    await page.waitForTimeout(1200)
+    // The seamless copy lands once the last tile has arrived.
+    await page.waitForSelector('.lb-draw-full', { state: 'attached' })
 
     const far = await page.evaluate(() => (window as unknown as { __far: number }).__far)
     expect(far).toBeGreaterThan(400)
@@ -116,6 +151,70 @@ test.describe('React demo', () => {
     expect(measured.imageWidth).toBeCloseTo(measured.tileWidth * measured.cols, 0)
   })
 
+  test('opens as a modal dialog and gives focus back on close', async ({ page }) => {
+    const thumb = page.locator('.lb-thumb').first()
+    await thumb.click()
+    const overlay = openOverlay(page)
+    await expect(overlay).toHaveClass(/is-open/)
+    expect(await overlay.evaluate((node) => node.matches('dialog:modal'))).toBe(true)
+    await expect(overlay.locator('.lb-close')).toBeFocused()
+    await page.keyboard.press('Escape')
+    await expect(overlay).toHaveCount(0)
+    await expect(thumb).toBeFocused()
+  })
+
+  test('the picture fills the stage', async ({ page }) => {
+    await page.locator('.lb-thumb').first().click()
+    const overlay = openOverlay(page)
+    await expect(overlay).toHaveClass(/is-open/)
+    await settled(page)
+    const [stage, img] = await Promise.all([
+      overlay.locator('.lb-stage').boundingBox(),
+      overlay.locator('.lb-img').boundingBox(),
+    ])
+    expect(img).toEqual(stage)
+  })
+
+  test('pop closes into the thumbnail of the image on show', async ({ page }) => {
+    await page.locator('.lb-thumb').first().click()
+    const overlay = openOverlay(page)
+    await expect(overlay).toHaveClass(/is-open/)
+    await page.keyboard.press('ArrowRight')
+    await page.keyboard.press('ArrowRight')
+    await expect(overlay.locator('.lb-counter')).toHaveText('Image 3 of 6')
+    await settled(page)
+
+    // Where the third thumbnail sits relative to the stage, measured at rest.
+    const expected = await page.evaluate(() => {
+      const centre = (r: DOMRect) => [r.left + r.width / 2, r.top + r.height / 2]
+      const [tx, ty] = centre(document.querySelectorAll('.lb-thumb')[2].getBoundingClientRect())
+      const [sx, sy] = centre(document.querySelector('.lb-stage')!.getBoundingClientRect())
+      return { dx: tx - sx, dy: ty - sy }
+    })
+    await page.keyboard.press('Escape')
+    const from = await overlay
+      .locator('.lb-stage')
+      .evaluate((stage) => stage.style.getPropertyValue('--lb-pop-from'))
+    const [dx, dy] = from.match(/-?[\d.]+(?=px)/g)!.map(Number)
+    expect(dx).toBeCloseTo(expected.dx, 0)
+    expect(dy).toBeCloseTo(expected.dy, 0)
+  })
+
+  test('a mouse drag that ends off the picture leaves the overlay open', async ({ page }) => {
+    await page.locator('.lb-thumb').first().click()
+    const overlay = openOverlay(page)
+    await expect(overlay).toHaveClass(/is-open/)
+    await settled(page)
+    const stage = (await overlay.locator('.lb-stage').boundingBox())!
+    await page.mouse.move(stage.x + stage.width / 2, stage.y + stage.height / 2)
+    await page.mouse.down()
+    // Up into the empty margin above the stage: not far enough sideways to
+    // navigate, and upwards, so not a swipe to close either.
+    await page.mouse.move(stage.x + stage.width / 2, stage.y - 20, { steps: 5 })
+    await page.mouse.up()
+    await expect(overlay).toHaveClass(/is-open/)
+  })
+
   test('backdrop click closes the overlay', async ({ page }) => {
     await page.locator('.lb-thumb').first().click()
     const overlay = openOverlay(page)
@@ -146,7 +245,6 @@ test.describe('Vanilla demo', () => {
     await expect(overlay.locator('.lb-counter')).toHaveText('Image 3 of 6')
     await expect(overlay.locator('.lb-title')).toHaveText('Highland mist')
   })
-
 })
 
 // Not in the describe above: the response listener must be attached before the
@@ -155,11 +253,15 @@ test('the vanilla page ships a small framework-free bundle', async ({ page }) =>
   const sizes: Promise<number>[] = []
   page.on('response', (response) => {
     if (response.url().includes('.js')) {
-      sizes.push(response.body().then((body) => body.length).catch(() => 0))
+      sizes.push(
+        response
+          .body()
+          .then((body) => body.length)
+          .catch(() => 0),
+      )
     }
   })
-  await page.goto('/vanilla', { waitUntil: 'load' })
-  await page.waitForTimeout(500)
+  await page.goto('/vanilla', { waitUntil: 'networkidle' })
   const total = (await Promise.all(sizes)).reduce((a, b) => a + b, 0)
   expect(total).toBeGreaterThan(0)
   // The React runtime alone is ~180 KB; the whole vanilla page stays tiny.
